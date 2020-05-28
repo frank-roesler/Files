@@ -17,7 +17,6 @@ def dist(A,B):
     # B = single point
     return np.sqrt((A[:,:1]-B[0])**2 + (A[:,1:2]-B[1])**2)
 
-
 lambda_f = 1
 
 def random_walk(A):
