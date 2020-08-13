@@ -2,20 +2,20 @@ from celluloid import Camera
 import numpy as np
 import matplotlib.pyplot as pp
 
-
 N = 2000 # Number of people
 q = 0.0 # Percentage of vaccinated people
-D = 90 # Size of Domain
+D = 95 # Size of Domain
 
-T_recover = 30         # time to recover from illness
-T_immune = 50         # time after illness in which one is immune
-Spreading_distance = 1.5 # distance at which infected individuals infect others
+T_recover = 90         # time to recover from illness
+T_immune = 90         # time after illness in which one is immune
+Spreading_distance = 1.4 # distance at which infected individuals infect others
 T = 600                # total running time
     
 def dist(A,B):
     # A = array of points
     # B = single point
     return np.sqrt((A[:,:1]-B[0])**2 + (A[:,1:2]-B[1])**2)
+
 
 lambda_f = 1
 
@@ -24,6 +24,7 @@ def random_walk(A):
     delta_y = np.random.uniform(-lambda_f,lambda_f,A.shape[0])[:,np.newaxis]
     A[:,:1] = A[:,:1]+delta_x
     A[:,1:2] = A[:,1:2]+delta_y
+    # Reflection at the boundary:
     A[A[:,0]>D,:1] = -2*A[A[:,0]>D,:1]+3*D
     A[A[:,1]>D,1:2] = 3*D-2*A[A[:,1]>D,1:2]
     A[A[:,0]<0,:1] = -A[A[:,0]<0,:1]
@@ -46,18 +47,19 @@ Times[0]=T_recover
 Times_immune = np.zeros(N)
 
 
-f, (P1,P2)=pp.subplots(ncols=2, figsize=(14,6))
+f, (P1,P2)=pp.subplots(ncols=2, figsize=(12,5))
 camera = Camera(f)
 
 L = []
 m=0
 n=1
-while len(I[I==1])!=0:
+ctr=0
+while len(I[I==1])!=0 and ctr<1000:
 # for r in range(T):
-    # print(n)
-    L.append(I[I==1].shape[0])
+    print(n)
+    L.append(len(I[I==1]))
     fill = [np.nan for k in range(T-len(L)+1)]
-    P1.plot(range(T+1),L+fill, color='r')
+    P1.plot(range(len(L+fill)),L+fill, color='r')
     P1.axis([0, T, 0, N])
     P2.plot(S[:,0],S[:,1],'.', c='b')
     P2.plot(S[I==1,0],S[I==1,1],'.', c='r')
@@ -65,13 +67,13 @@ while len(I[I==1])!=0:
     camera.snap()
     # pp.plot(Vx,Vy,'.', c='y')
     while n!=m:
-        n = I[I==1].shape[0]
+        n = len(I[I==1])
         infected = S[np.where(I==1)]   
         J = np.copy(I)         
         for i in range(len(infected)):
             Infection_indices = np.where((dist(S,infected[i])<Spreading_distance)*(I!=2)[:,np.newaxis])[0]
             I[Infection_indices] = 1 
-        m = I[I==1].shape[0]
+        m = len(I[I==1])
         Times[np.where(J!=I)] = T_recover
     n=n-1
 
@@ -88,6 +90,10 @@ while len(I[I==1])!=0:
     Times_immune[Times_immune>0] = Times_immune[Times_immune>0]-1
     TT2 = Times_immune>0
     I[TT!=TT2] = 0
+    
+    
+    
+    
     
 
 anim = camera.animate() # repeat=False
